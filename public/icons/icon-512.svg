@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#059669"/>
+  <g transform="translate(256,256)">
+    <!-- Golf flag -->
+    <line x1="-25" y1="130" x2="-25" y2="-120" stroke="white" stroke-width="12" stroke-linecap="round"/>
+    <polygon points="-25,-120 95,-80 -25,-40" fill="white" opacity="0.9"/>
+    <!-- Golf ball -->
+    <circle cx="40" cy="120" r="36" fill="white"/>
+    <circle cx="32" cy="112" r="5" fill="#059669" opacity="0.3"/>
+    <circle cx="48" cy="112" r="5" fill="#059669" opacity="0.3"/>
+    <circle cx="40" cy="128" r="5" fill="#059669" opacity="0.3"/>
+    <!-- GS text -->
+    <text x="0" y="25" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="700" font-size="96" fill="white" opacity="0.95">GS</text>
+  </g>
+</svg>

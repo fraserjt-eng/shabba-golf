@@ -12,10 +12,15 @@ export interface Database {
         Row: {
           id: string
           email: string
+          password: string
           display_name: string
           avatar_url: string | null
           phone: string | null
           handicap: number | null
+          ghin_number: string | null
+          handicap_index: number | null
+          venmo_username: string | null
+          preferred_tee_time: string | null
           stats: UserStats | null
           created_at: string
           updated_at: string
@@ -50,6 +55,9 @@ export interface Database {
           signup_deadline: string | null
           max_players: number | null
           signed_up_ids: string[]
+          slope_rating: number | null
+          course_rating: number | null
+          par: number | null
           created_by: string
           notes: string | null
           created_at: string

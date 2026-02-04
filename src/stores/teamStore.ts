@@ -12,6 +12,10 @@ interface TeamState {
   fetchTeams: () => Promise<void>
   setActiveTeam: (teamId: string) => void
   createTeam: (team: TeamInsert) => Promise<Team | null>
+  updateTeam: (teamId: string, updates: Partial<TeamInsert>) => Promise<void>
+  addMember: (teamId: string, userId: string) => void
+  removeMember: (teamId: string, userId: string) => Promise<void>
+  updateMemberRole: (teamId: string, userId: string, role: 'admin' | 'member') => Promise<void>
   activeTeam: () => Team | undefined
   clearError: () => void
 }
@@ -79,6 +83,139 @@ export const useTeamStore = create<TeamState>()(
               loading: false,
             })
             return null
+          }
+        },
+
+        updateTeam: async (teamId, updates) => {
+          if (!isSupabaseConfigured()) {
+            // Demo mode: update in local state
+            set((state) => ({
+              teams: state.teams.map((t) =>
+                t.id === teamId
+                  ? { ...t, ...updates, updated_at: new Date().toISOString() }
+                  : t,
+              ),
+            }))
+            return
+          }
+          set({ loading: true, error: null })
+          try {
+            const { error } = await supabase
+              .from(TABLES.TEAMS)
+              .update(updates)
+              .eq('id', teamId)
+            if (error) throw error
+            set((state) => ({
+              teams: state.teams.map((t) =>
+                t.id === teamId
+                  ? { ...t, ...updates, updated_at: new Date().toISOString() }
+                  : t,
+              ),
+              loading: false,
+            }))
+          } catch (error) {
+            set({
+              error: error instanceof Error ? error.message : 'Failed to update team',
+              loading: false,
+            })
+          }
+        },
+
+        addMember: (teamId, userId) => {
+          const team = get().teams.find((t) => t.id === teamId)
+          if (!team || team.member_ids.includes(userId)) return
+          set((state) => ({
+            teams: state.teams.map((t) =>
+              t.id === teamId
+                ? { ...t, member_ids: [...t.member_ids, userId], updated_at: new Date().toISOString() }
+                : t,
+            ),
+          }))
+        },
+
+        removeMember: async (teamId, userId) => {
+          const team = get().teams.find((t) => t.id === teamId)
+          if (!team) return
+
+          const newMemberIds = team.member_ids.filter((id) => id !== userId)
+          const newAdminIds = team.admin_ids.filter((id) => id !== userId)
+
+          if (!isSupabaseConfigured()) {
+            set((state) => ({
+              teams: state.teams.map((t) =>
+                t.id === teamId
+                  ? { ...t, member_ids: newMemberIds, admin_ids: newAdminIds, updated_at: new Date().toISOString() }
+                  : t,
+              ),
+            }))
+            return
+          }
+          set({ loading: true, error: null })
+          try {
+            const { error } = await supabase
+              .from(TABLES.TEAMS)
+              .update({ member_ids: newMemberIds, admin_ids: newAdminIds })
+              .eq('id', teamId)
+            if (error) throw error
+            set((state) => ({
+              teams: state.teams.map((t) =>
+                t.id === teamId
+                  ? { ...t, member_ids: newMemberIds, admin_ids: newAdminIds, updated_at: new Date().toISOString() }
+                  : t,
+              ),
+              loading: false,
+            }))
+          } catch (error) {
+            set({
+              error: error instanceof Error ? error.message : 'Failed to remove member',
+              loading: false,
+            })
+          }
+        },
+
+        updateMemberRole: async (teamId, userId, role) => {
+          const team = get().teams.find((t) => t.id === teamId)
+          if (!team) return
+
+          let newAdminIds: string[]
+          if (role === 'admin') {
+            newAdminIds = team.admin_ids.includes(userId)
+              ? team.admin_ids
+              : [...team.admin_ids, userId]
+          } else {
+            newAdminIds = team.admin_ids.filter((id) => id !== userId)
+          }
+
+          if (!isSupabaseConfigured()) {
+            set((state) => ({
+              teams: state.teams.map((t) =>
+                t.id === teamId
+                  ? { ...t, admin_ids: newAdminIds, updated_at: new Date().toISOString() }
+                  : t,
+              ),
+            }))
+            return
+          }
+          set({ loading: true, error: null })
+          try {
+            const { error } = await supabase
+              .from(TABLES.TEAMS)
+              .update({ admin_ids: newAdminIds })
+              .eq('id', teamId)
+            if (error) throw error
+            set((state) => ({
+              teams: state.teams.map((t) =>
+                t.id === teamId
+                  ? { ...t, admin_ids: newAdminIds, updated_at: new Date().toISOString() }
+                  : t,
+              ),
+              loading: false,
+            }))
+          } catch (error) {
+            set({
+              error: error instanceof Error ? error.message : 'Failed to update member role',
+              loading: false,
+            })
           }
         },
 

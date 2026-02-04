@@ -1,44 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  /* Golf color palette */
-  --color-fairway: #059669;
-  --color-fairway-light: #10b981;
-  --color-fairway-dark: #047857;
-  --color-sky: #0284C7;
+  /* Golf color palette — blue & green */
+  --color-fairway: #16a34a;
+  --color-fairway-light: #22c55e;
+  --color-fairway-dark: #15803d;
+  --color-sky: #0369a1;
   --color-sky-light: #38bdf8;
+  --color-sky-dark: #0c4a6e;
   --color-trophy: #D97706;
   --color-penalty: #DC2626;
-  --color-surface: #F9FAFB;
-  --color-surface-green: #f0fdf4;
+  --color-surface: #f0f9f4;
+  --color-surface-green: #ecfdf5;
   --color-dark-green: #14532d;
 
   /* shadcn CSS variable pattern */
   --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
+  --color-foreground: #0c1e15;
   --color-card: #ffffff;
-  --color-card-foreground: #0a0a0a;
+  --color-card-foreground: #0c1e15;
   --color-popover: #ffffff;
-  --color-popover-foreground: #0a0a0a;
-  --color-primary: #059669;
+  --color-popover-foreground: #0c1e15;
+  --color-primary: #16a34a;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #f0fdf4;
+  --color-secondary: #ecfdf5;
   --color-secondary-foreground: #14532d;
-  --color-muted: #f3f4f6;
-  --color-muted-foreground: #6b7280;
-  --color-accent: #f0fdf4;
-  --color-accent-foreground: #14532d;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #e0f2fe;
+  --color-accent-foreground: #0c4a6e;
   --color-destructive: #DC2626;
   --color-destructive-foreground: #ffffff;
-  --color-border: #e5e7eb;
-  --color-input: #e5e7eb;
-  --color-ring: #059669;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #16a34a;
 
   /* Radius */
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
   /* Fonts */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Open Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
@@ -53,17 +55,78 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Fixed background course image at 10% opacity */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url('/images/hero-course.jpg') center/cover no-repeat fixed;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* Heading font */
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
 /* Utility: mono numbers for stats/money */
 .font-stats {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
+/* Hero dissolve gradient — fades image into content below */
+.hero-dissolve {
+  position: relative;
+}
+
+.hero-dissolve img {
+  object-position: center 40%;
+}
+
+.hero-dissolve::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(240, 249, 244, 0.4) 50%,
+    var(--color-surface) 100%
+  );
+  pointer-events: none;
+}
+
+/* Hero overlay — very subtle, just enough for text readability */
+.hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(12, 30, 21, 0.35) 0%,
+    rgba(12, 30, 21, 0.1) 40%,
+    transparent 70%
+  );
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
 /* ScrollFadeIn animation */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -72,7 +135,7 @@ body {
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 1.2s ease-out forwards;
 }
 
 /* Coin drop animation for backout pot */
@@ -109,4 +172,97 @@ body {
 
 .animate-dropdown-in {
   animation: dropdownIn 0.15s ease-out forwards;
+}
+
+/* Auth page slide-in animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+/* Modal overlay */
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalContentIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-overlay {
+  animation: modalOverlayIn 0.2s ease-out forwards;
+}
+
+.animate-modal-content {
+  animation: modalContentIn 0.2s ease-out forwards;
+}
+
+/* Landing page fade-in */
+@keyframes landingFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-landing-fade-in {
+  animation: landingFadeIn 1s ease-out forwards;
+}
+
+/* Landing page slide-up for CTA buttons */
+@keyframes landingSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-landing-slide-up {
+  opacity: 0;
+  animation: landingSlideUp 0.8s ease-out 0.4s forwards;
+}
+
+/* Landing page logo glow */
+@keyframes landingGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(22, 163, 74, 0.2), 0 0 40px rgba(22, 163, 74, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(22, 163, 74, 0.4), 0 0 60px rgba(22, 163, 74, 0.2);
+  }
+}
+
+.animate-landing-glow {
+  animation: landingGlow 3s ease-in-out infinite;
+}
+
+/* Smooth scroll for the whole page */
+html {
+  scroll-behavior: smooth;
 }

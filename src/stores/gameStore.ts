@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { Game, GameInsert } from '@/types'
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase'
-import { demoGames } from '@/lib/demo-data'
+import { allDemoGames } from '@/lib/demo-data'
 
 interface GameState {
   games: Game[]
@@ -11,6 +11,7 @@ interface GameState {
   fetchGames: (roundId: string) => Promise<void>
   createGame: (game: GameInsert) => Promise<Game | null>
   updateResult: (gameId: string, results: Record<string, number>) => Promise<void>
+  settleGame: (gameId: string) => Promise<void>
   clearError: () => void
 }
 
@@ -23,7 +24,7 @@ export const useGameStore = create<GameState>()(
 
       fetchGames: async (roundId: string) => {
         if (!isSupabaseConfigured()) {
-          const filtered = demoGames.filter((g) => g.round_id === roundId)
+          const filtered = allDemoGames.filter((g) => g.round_id === roundId)
           set({ games: filtered, loading: false })
           return
         }
@@ -45,7 +46,19 @@ export const useGameStore = create<GameState>()(
       },
 
       createGame: async (game) => {
-        if (!isSupabaseConfigured()) return null
+        if (!isSupabaseConfigured()) {
+          const newGame: Game = {
+            ...game,
+            id: `demo-game-${Date.now()}`,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+          set((state) => ({
+            games: [...state.games, newGame],
+            loading: false,
+          }))
+          return newGame
+        }
         set({ loading: true, error: null })
         try {
           const { data, error } = await supabase
@@ -69,7 +82,14 @@ export const useGameStore = create<GameState>()(
       },
 
       updateResult: async (gameId, results) => {
-        if (!isSupabaseConfigured()) return
+        if (!isSupabaseConfigured()) {
+          set((state) => ({
+            games: state.games.map((g) =>
+              g.id === gameId ? { ...g, results } : g,
+            ),
+          }))
+          return
+        }
         set({ loading: true, error: null })
         try {
           const { error } = await supabase
@@ -86,6 +106,34 @@ export const useGameStore = create<GameState>()(
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to update results',
+            loading: false,
+          })
+        }
+      },
+
+      settleGame: async (gameId) => {
+        if (!isSupabaseConfigured()) {
+          set((state) => ({
+            games: state.games.map((g) =>
+              g.id === gameId ? { ...g, settled: true } : g,
+            ),
+          }))
+          return
+        }
+        try {
+          const { error } = await supabase
+            .from(TABLES.GAMES)
+            .update({ settled: true })
+            .eq('id', gameId)
+          if (error) throw error
+          set((state) => ({
+            games: state.games.map((g) =>
+              g.id === gameId ? { ...g, settled: true } : g,
+            ),
+          }))
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to settle game',
             loading: false,
           })
         }
