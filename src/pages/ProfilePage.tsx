@@ -10,6 +10,7 @@ import { ScrollFadeIn } from '@/components/ui/scroll-fade-in'
 import { GhinCard } from '@/components/profile/GhinCard'
 import { useUserStore, useTeamStore, useRoundStore } from '@/stores'
 import { getInitials, getAvatarColor, formatCurrency } from '@/lib/utils'
+import { calculateCourseHandicap } from '@/lib/ghin'
 import { Settings, LogOut, Edit2, Save, X, Users, Shield } from 'lucide-react'
 
 export function ProfilePage() {
@@ -68,9 +69,13 @@ export function ProfilePage() {
   }
 
   const handleGhinUpdate = (ghinNumber: string, handicapIndex: number) => {
+    const courseHC = activeCourse
+      ? calculateCourseHandicap(handicapIndex, activeCourse.slopeRating, activeCourse.courseRating, activeCourse.par)
+      : Math.round(handicapIndex)
     updateProfile({
       ghin_number: ghinNumber,
       handicap_index: handicapIndex,
+      handicap: courseHC,
     } as Record<string, unknown>)
   }
 
