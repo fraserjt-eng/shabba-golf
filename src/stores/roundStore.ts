@@ -3,6 +3,7 @@ import { persist, devtools } from 'zustand/middleware'
 import type { Round } from '@/types'
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase'
 import { optimisticUpdate } from '@/lib/optimistic'
+import { demoRounds } from '@/lib/demo-data'
 
 interface RoundState {
   rounds: Round[]
@@ -23,7 +24,11 @@ export const useRoundStore = create<RoundState>()(
         error: null,
 
         fetchRounds: async (teamId: string) => {
-          if (!isSupabaseConfigured()) return
+          if (!isSupabaseConfigured()) {
+            const filtered = demoRounds.filter((r) => r.team_id === teamId)
+            set({ rounds: filtered, loading: false })
+            return
+          }
           set({ loading: true, error: null })
           try {
             const { data, error } = await supabase

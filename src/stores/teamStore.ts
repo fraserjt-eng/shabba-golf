@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, devtools } from 'zustand/middleware'
 import type { Team, TeamInsert } from '@/types'
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase'
+import { demoTeams } from '@/lib/demo-data'
 
 interface TeamState {
   teams: Team[]
@@ -25,7 +26,14 @@ export const useTeamStore = create<TeamState>()(
         error: null,
 
         fetchTeams: async () => {
-          if (!isSupabaseConfigured()) return
+          if (!isSupabaseConfigured()) {
+            set({ teams: demoTeams, loading: false })
+            const { activeTeamId } = get()
+            if (!activeTeamId && demoTeams.length > 0) {
+              set({ activeTeamId: demoTeams[0].id })
+            }
+            return
+          }
           set({ loading: true, error: null })
           try {
             const { data, error } = await supabase

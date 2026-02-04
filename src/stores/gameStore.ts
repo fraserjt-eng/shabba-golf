@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { Game, GameInsert } from '@/types'
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase'
+import { demoGames } from '@/lib/demo-data'
 
 interface GameState {
   games: Game[]
@@ -21,7 +22,11 @@ export const useGameStore = create<GameState>()(
       error: null,
 
       fetchGames: async (roundId: string) => {
-        if (!isSupabaseConfigured()) return
+        if (!isSupabaseConfigured()) {
+          const filtered = demoGames.filter((g) => g.round_id === roundId)
+          set({ games: filtered, loading: false })
+          return
+        }
         set({ loading: true, error: null })
         try {
           const { data, error } = await supabase

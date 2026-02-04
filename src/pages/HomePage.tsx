@@ -1,78 +1,130 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { useEffect, useMemo } from 'react'
 import { ScrollFadeIn } from '@/components/ui/scroll-fade-in'
-import { Calendar, Users, DollarSign } from 'lucide-react'
+import { NextRoundCard } from '@/components/dashboard/NextRoundCard'
+import { SeasonStats } from '@/components/dashboard/SeasonStats'
+import { PlayerList } from '@/components/round/PlayerList'
+import { GamesSection } from '@/components/games/GamesSection'
+import { GroupPotCard } from '@/components/backout/GroupPotCard'
+import { useUserStore, useTeamStore, useRoundStore, useGameStore, useBackoutStore } from '@/stores'
+import { getDemoUser } from '@/lib/demo-data'
+import { getGreeting } from '@/lib/utils'
+import { getBackoutTiming } from '@/lib/round-utils'
+import type { User } from '@/types'
 
 export function HomePage() {
+  const currentUser = useUserStore((s) => s.currentUser)
+  const { activeTeamId, activeTeam: getActiveTeam } = useTeamStore()
+  const activeTeam = getActiveTeam()
+  const { rounds, fetchRounds, signUp, withdraw } = useRoundStore()
+  const { games, fetchGames } = useGameStore()
+  const { fees, fetchFees, potTotal } = useBackoutStore()
+
+  // Fetch rounds + backout fees when team changes
+  useEffect(() => {
+    if (activeTeamId) {
+      fetchRounds(activeTeamId)
+      fetchFees(activeTeamId)
+    }
+  }, [activeTeamId, fetchRounds, fetchFees])
+
+  // Find the next signup_open round
+  const nextRound = useMemo(() => {
+    return rounds
+      .filter((r) => r.status === 'signup_open')
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0] ?? null
+  }, [rounds])
+
+  // Fetch games for the next round
+  useEffect(() => {
+    if (nextRound) {
+      fetchGames(nextRound.id)
+    }
+  }, [nextRound, fetchGames])
+
+  const isUserSignedUp = nextRound?.signed_up_ids.includes(currentUser?.id ?? '') ?? false
+
+  // Resolve signed-up players to User objects
+  const signedUpPlayers: User[] = useMemo(() => {
+    if (!nextRound) return []
+    return nextRound.signed_up_ids
+      .map((id) => getDemoUser(id))
+      .filter((u): u is User => u != null)
+  }, [nextRound])
+
+  // Core player IDs (first 5 members of the team)
+  const corePlayerIds = useMemo(() => {
+    return activeTeam?.member_ids.slice(0, 5) ?? []
+  }, [activeTeam])
+
+  const feeSchedule = activeTeam?.settings?.backout_fee_schedule ?? {
+    before_lock: 5,
+    after_lock: 15,
+    no_show: 25,
+  }
+
+  const activeTier = nextRound
+    ? getBackoutTiming(nextRound.date, nextRound.signup_deadline, feeSchedule).tier
+    : undefined
+
+  const firstName = currentUser?.display_name.split(' ')[0] ?? 'Golfer'
+
   return (
     <div className="px-4 py-6 space-y-6">
-      {/* Welcome section */}
+      {/* Welcome */}
       <ScrollFadeIn>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <h2 className="text-2xl font-light text-foreground">
-            Welcome to <span className="font-semibold text-fairway">Golf Squad</span>
+            {getGreeting()}, <span className="font-semibold text-fairway">{firstName}</span>
           </h2>
-          <p className="text-muted-foreground">
-            Organize rounds, track games, settle up.
-          </p>
+          {activeTeam && (
+            <p className="text-sm text-muted-foreground">{activeTeam.name}</p>
+          )}
         </div>
       </ScrollFadeIn>
 
-      {/* Quick actions */}
-      <ScrollFadeIn delay={100}>
-        <div className="grid grid-cols-3 gap-3">
-          <Button variant="outline" className="flex-col h-auto py-4 gap-2">
-            <Calendar className="h-5 w-5 text-fairway" />
-            <span className="text-xs">Schedule</span>
-          </Button>
-          <Button variant="outline" className="flex-col h-auto py-4 gap-2">
-            <Users className="h-5 w-5 text-sky" />
-            <span className="text-xs">Invite</span>
-          </Button>
-          <Button variant="outline" className="flex-col h-auto py-4 gap-2">
-            <DollarSign className="h-5 w-5 text-trophy" />
-            <span className="text-xs">Settle</span>
-          </Button>
-        </div>
-      </ScrollFadeIn>
+      {/* Next Round Card */}
+      {nextRound && (
+        <ScrollFadeIn delay={100}>
+          <NextRoundCard
+            round={nextRound}
+            isUserSignedUp={isUserSignedUp}
+            onSignUp={() => currentUser && signUp(nextRound.id, currentUser.id)}
+            onWithdraw={() => currentUser && withdraw(nextRound.id, currentUser.id)}
+            feeSchedule={feeSchedule}
+          />
+        </ScrollFadeIn>
+      )}
 
-      {/* Upcoming rounds placeholder */}
-      <ScrollFadeIn delay={200}>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Upcoming Rounds</CardTitle>
-              <Badge variant="secondary">0 rounds</Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No upcoming rounds. Create a team and schedule your first round!
-            </p>
-          </CardContent>
-        </Card>
-      </ScrollFadeIn>
+      {/* Player List */}
+      {nextRound && signedUpPlayers.length > 0 && (
+        <ScrollFadeIn delay={200}>
+          <PlayerList
+            players={signedUpPlayers}
+            corePlayerIds={corePlayerIds}
+          />
+        </ScrollFadeIn>
+      )}
 
-      {/* Stats preview */}
+      {/* Season Stats */}
       <ScrollFadeIn delay={300}>
-        <div className="bg-dark-green rounded-xl p-6 text-white">
-          <h3 className="text-lg font-light mb-4">Season Stats</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="font-stats text-2xl font-semibold">0</div>
-              <div className="text-xs text-white/70 mt-1">Rounds</div>
-            </div>
-            <div className="text-center">
-              <div className="font-stats text-2xl font-semibold">—</div>
-              <div className="text-xs text-white/70 mt-1">Avg Score</div>
-            </div>
-            <div className="text-center">
-              <div className="font-stats text-2xl font-semibold text-trophy">$0</div>
-              <div className="text-xs text-white/70 mt-1">Winnings</div>
-            </div>
-          </div>
-        </div>
+        <SeasonStats stats={currentUser?.stats ?? null} />
+      </ScrollFadeIn>
+
+      {/* Games */}
+      {nextRound && (
+        <ScrollFadeIn delay={400}>
+          <GamesSection games={games} />
+        </ScrollFadeIn>
+      )}
+
+      {/* Group Pot */}
+      <ScrollFadeIn delay={500}>
+        <GroupPotCard
+          potTotal={potTotal()}
+          feeSchedule={feeSchedule}
+          fees={fees}
+          activeTier={activeTier}
+        />
       </ScrollFadeIn>
     </div>
   )

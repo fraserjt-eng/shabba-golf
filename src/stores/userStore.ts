@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, devtools } from 'zustand/middleware'
 import type { User, UserUpdate } from '@/types'
 import { supabase, TABLES, isSupabaseConfigured } from '@/lib/supabase'
+import { demoUsers, CURRENT_USER_ID } from '@/lib/demo-data'
 
 interface UserState {
   currentUser: User | null
@@ -22,7 +23,11 @@ export const useUserStore = create<UserState>()(
         error: null,
 
         fetchCurrentUser: async () => {
-          if (!isSupabaseConfigured()) return
+          if (!isSupabaseConfigured()) {
+            const demoUser = demoUsers.find((u) => u.id === CURRENT_USER_ID) ?? null
+            set({ currentUser: demoUser, loading: false })
+            return
+          }
           set({ loading: true, error: null })
           try {
             const { data: { user: authUser } } = await supabase.auth.getUser()
