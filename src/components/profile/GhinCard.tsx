@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { RefreshCw, Hash, TrendingDown } from 'lucide-react'
-import { lookupGhinHandicap, calculateCourseHandicap } from '@/lib/ghin'
+import { Hash, TrendingDown, Save } from 'lucide-react'
+import { calculateCourseHandicap } from '@/lib/ghin'
 
 interface GhinCardProps {
   ghinNumber: string | null
@@ -19,22 +19,18 @@ interface GhinCardProps {
 }
 
 export function GhinCard({ ghinNumber, handicapIndex, onUpdate, activeCourse }: GhinCardProps) {
-  const [inputValue, setInputValue] = useState(ghinNumber ?? '')
-  const [syncing, setSyncing] = useState(false)
-  const [syncError, setSyncError] = useState<string | null>(null)
+  const [indexInput, setIndexInput] = useState(handicapIndex?.toFixed(1) ?? '')
+  const [ghinInput, setGhinInput] = useState(ghinNumber ?? '')
+  const [saved, setSaved] = useState(false)
 
-  const handleSync = async () => {
-    if (!inputValue.trim()) return
-    setSyncing(true)
-    setSyncError(null)
+  const parsedIndex = parseFloat(indexInput)
+  const isValid = !isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex <= 54
 
-    const result = await lookupGhinHandicap(inputValue.trim())
-    if (result) {
-      onUpdate(inputValue.trim(), result.handicapIndex)
-    } else {
-      setSyncError('GHIN number not found')
-    }
-    setSyncing(false)
+  const handleSave = () => {
+    if (!isValid) return
+    onUpdate(ghinInput.trim(), parsedIndex)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   const courseHandicap = handicapIndex != null && activeCourse
@@ -51,31 +47,43 @@ export function GhinCard({ ghinNumber, handicapIndex, onUpdate, activeCourse }: 
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Hash className="h-4 w-4 text-fairway" />
-          GHIN Handicap
+          Handicap
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Input
-            placeholder="GHIN Number"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="flex-1"
-          />
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Handicap Index</label>
+            <Input
+              type="number"
+              step="0.1"
+              min="0"
+              max="54"
+              placeholder="e.g. 7.7"
+              value={indexInput}
+              onChange={(e) => { setIndexInput(e.target.value); setSaved(false) }}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">GHIN # (optional)</label>
+            <Input
+              placeholder="e.g. 2270337"
+              value={ghinInput}
+              onChange={(e) => { setGhinInput(e.target.value); setSaved(false) }}
+              className="mt-1"
+            />
+          </div>
           <Button
             size="sm"
-            onClick={handleSync}
-            disabled={syncing || !inputValue.trim()}
-            className="gap-1"
+            onClick={handleSave}
+            disabled={!isValid || saved}
+            className="w-full gap-1.5 bg-fairway hover:bg-fairway-dark"
           >
-            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-            Sync
+            <Save className="h-4 w-4" />
+            {saved ? 'Saved!' : 'Save Handicap'}
           </Button>
         </div>
-
-        {syncError && (
-          <p className="text-sm text-penalty">{syncError}</p>
-        )}
 
         {handicapIndex != null && (
           <div className="bg-surface-green rounded-lg p-4 space-y-3">

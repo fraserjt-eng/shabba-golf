@@ -184,6 +184,11 @@ export function HomePage() {
                 }
               }}
               isAdmin={isAdmin}
+              courseData={nextRound.slope_rating && nextRound.course_rating && nextRound.par ? {
+                slopeRating: nextRound.slope_rating,
+                courseRating: nextRound.course_rating,
+                par: nextRound.par,
+              } : null}
             />
           </ScrollFadeIn>
         )}

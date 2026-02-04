@@ -6,14 +6,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn, getInitials, getAvatarColor } from '@/lib/utils'
 import { CURRENT_USER_ID } from '@/lib/demo-data'
+import { calculateCourseHandicap } from '@/lib/ghin'
 import { Users, Check, X, DollarSign, MessageSquare, Clock } from 'lucide-react'
 import type { User } from '@/types'
+
+interface CourseData {
+  slopeRating: number
+  courseRating: number
+  par: number
+}
 
 interface RoundSignupListProps {
   members: User[]
   signedUpIds: string[]
   onToggleSignup: (userId: string) => void
   isAdmin: boolean
+  courseData?: CourseData | null
 }
 
 export function RoundSignupList({
@@ -21,6 +29,7 @@ export function RoundSignupList({
   signedUpIds,
   onToggleSignup,
   isAdmin,
+  courseData,
 }: RoundSignupListProps) {
   const [paidMap, setPaidMap] = useState<Record<string, boolean>>({})
   const [noteMap, setNoteMap] = useState<Record<string, string>>({})
@@ -28,6 +37,12 @@ export function RoundSignupList({
   const [noteInput, setNoteInput] = useState('')
 
   const signedUpCount = members.filter((m) => signedUpIds.includes(m.id)).length
+
+  // Current user's course handicap for stroke comparison
+  const currentUser = members.find((m) => m.id === CURRENT_USER_ID)
+  const currentUserCourseHC = currentUser?.handicap_index != null && courseData
+    ? calculateCourseHandicap(currentUser.handicap_index, courseData.slopeRating, courseData.courseRating, courseData.par)
+    : null
 
   // Sort: current user first, then signed-up, then alphabetical
   const sorted = [...members].sort((a, b) => {
@@ -57,6 +72,18 @@ export function RoundSignupList({
 
   const canToggle = (userId: string) => userId === CURRENT_USER_ID || isAdmin
 
+  const getCourseHC = (member: User) => {
+    if (member.handicap_index == null || !courseData) return null
+    return calculateCourseHandicap(member.handicap_index, courseData.slopeRating, courseData.courseRating, courseData.par)
+  }
+
+  const getStrokesVsYou = (member: User) => {
+    if (member.id === CURRENT_USER_ID) return null
+    const memberHC = getCourseHC(member)
+    if (memberHC == null || currentUserCourseHC == null) return null
+    return memberHC - currentUserCourseHC
+  }
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -72,6 +99,8 @@ export function RoundSignupList({
             const isCurrentUser = member.id === CURRENT_USER_ID
             const isPaid = paidMap[member.id] ?? false
             const note = noteMap[member.id]
+            const courseHC = getCourseHC(member)
+            const strokeDiff = getStrokesVsYou(member)
 
             return (
               <div key={member.id} className="py-2.5">
@@ -101,8 +130,18 @@ export function RoundSignupList({
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {member.handicap != null && (
-                        <span>{member.handicap} HCP</span>
+                      {courseHC != null ? (
+                        <span className="font-stats">{courseHC} HC</span>
+                      ) : member.handicap_index != null ? (
+                        <span className="font-stats">{member.handicap_index.toFixed(1)} idx</span>
+                      ) : null}
+                      {strokeDiff != null && strokeDiff !== 0 && (
+                        <span className={cn(
+                          'font-stats font-medium',
+                          strokeDiff > 0 ? 'text-sky' : 'text-trophy',
+                        )}>
+                          {strokeDiff > 0 ? `+${strokeDiff} strokes` : `${strokeDiff} strokes`}
+                        </span>
                       )}
                       {member.preferred_tee_time && (
                         <span className="flex items-center gap-0.5">
