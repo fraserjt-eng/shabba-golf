@@ -94,11 +94,11 @@ h1, h2, h3, .font-heading {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 30%;
+  height: 20%;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(240, 249, 244, 0.4) 50%,
+    rgba(240, 249, 244, 0.3) 60%,
     var(--color-surface) 100%
   );
   pointer-events: none;
@@ -108,8 +108,8 @@ h1, h2, h3, .font-heading {
 .hero-overlay {
   background: linear-gradient(
     180deg,
-    rgba(12, 30, 21, 0.35) 0%,
-    rgba(12, 30, 21, 0.1) 40%,
+    rgba(12, 30, 21, 0.25) 0%,
+    rgba(12, 30, 21, 0.05) 40%,
     transparent 70%
   );
 }

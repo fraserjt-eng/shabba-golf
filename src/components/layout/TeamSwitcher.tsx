@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { ChevronDown, Check, Plus, Users } from 'lucide-react'
 import { useTeamStore } from '@/stores'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,15 @@ export function TeamSwitcher() {
 
   const activeTeam = teams.find((t) => t.id === activeTeamId)
 
+  // Sort: active team first, then alphabetical
+  const sortedTeams = useMemo(() => {
+    return [...teams].sort((a, b) => {
+      if (a.id === activeTeamId) return -1
+      if (b.id === activeTeamId) return 1
+      return a.name.localeCompare(b.name)
+    })
+  }, [teams, activeTeamId])
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -49,7 +58,7 @@ export function TeamSwitcher() {
       {open && (
         <div className="absolute right-0 top-full mt-1 w-64 bg-white rounded-xl shadow-lg border border-border z-50 animate-dropdown-in overflow-hidden">
           <div className="py-1">
-            {teams.map((team) => (
+            {sortedTeams.map((team) => (
               <button
                 key={team.id}
                 onClick={() => {

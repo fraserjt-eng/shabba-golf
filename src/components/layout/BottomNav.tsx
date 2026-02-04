@@ -1,8 +1,10 @@
+import { useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, Trophy, UserCircle, DollarSign } from 'lucide-react'
+import { Home, Trophy, UserCircle, DollarSign, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useUserStore, useTeamStore } from '@/stores'
 
-const tabs = [
+const baseTabs = [
   { path: '/dashboard', label: 'Home', icon: Home },
   { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { path: '/settlements', label: 'Settle Up', icon: DollarSign },
@@ -12,6 +14,18 @@ const tabs = [
 export function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
+  const currentUser = useUserStore((s) => s.currentUser)
+  const activeTeam = useTeamStore((s) => s.activeTeam)()
+
+  const isAdmin = activeTeam?.admin_ids.includes(currentUser?.id ?? '') ?? false
+
+  const tabs = useMemo(() => {
+    if (!isAdmin) return baseTabs as readonly { path: string; label: string; icon: typeof Home }[]
+    return [
+      ...baseTabs,
+      { path: '/admin', label: 'Admin', icon: Shield },
+    ] as const
+  }, [isAdmin])
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-border/50 shadow-sm pb-[env(safe-area-inset-bottom)]">

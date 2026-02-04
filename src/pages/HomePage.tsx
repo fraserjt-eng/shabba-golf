@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ScrollFadeIn } from '@/components/ui/scroll-fade-in'
 import { NextRoundCard } from '@/components/dashboard/NextRoundCard'
 import { SeasonStats } from '@/components/dashboard/SeasonStats'
-import { PlayerList } from '@/components/round/PlayerList'
+import { RoundSignupList } from '@/components/round/RoundSignupList'
 import { GamesSection } from '@/components/games/GamesSection'
 import { GroupPotCard } from '@/components/backout/GroupPotCard'
 import { RoundHistoryCard } from '@/components/round/RoundHistoryCard'
@@ -58,18 +58,15 @@ export function HomePage() {
 
   const isUserSignedUp = nextRound?.signed_up_ids.includes(currentUser?.id ?? '') ?? false
 
-  // Resolve signed-up players to User objects
-  const signedUpPlayers: User[] = useMemo(() => {
-    if (!nextRound) return []
-    return nextRound.signed_up_ids
+  // All team members resolved to User objects
+  const allTeamMembers: User[] = useMemo(() => {
+    if (!activeTeam) return []
+    return activeTeam.member_ids
       .map((id) => getDemoUser(id))
       .filter((u): u is User => u != null)
-  }, [nextRound])
-
-  // Core player IDs (first 5 members of the team)
-  const corePlayerIds = useMemo(() => {
-    return activeTeam?.member_ids.slice(0, 5) ?? []
   }, [activeTeam])
+
+  const isAdmin = activeTeam?.admin_ids.includes(currentUser?.id ?? '') ?? false
 
   const feeSchedule = activeTeam?.settings?.backout_fee_schedule ?? {
     before_lock: 5,
@@ -86,7 +83,7 @@ export function HomePage() {
   return (
     <div className="space-y-6">
       {/* Hero banner with course image dissolve */}
-      <div className="hero-dissolve -mt-[calc(2rem+3rem)] h-[40vh] min-h-[280px]">
+      <div className="hero-dissolve -mt-[calc(2rem+3rem)] h-[55vh] min-h-[360px]">
         <img
           src="/images/hero-course.jpg"
           alt="Golf course panorama"
@@ -173,12 +170,20 @@ export function HomePage() {
           </ScrollFadeIn>
         )}
 
-        {/* Player List */}
-        {nextRound && signedUpPlayers.length > 0 && (
+        {/* Round Signup List — all team members */}
+        {nextRound && allTeamMembers.length > 0 && (
           <ScrollFadeIn delay={400}>
-            <PlayerList
-              players={signedUpPlayers}
-              corePlayerIds={corePlayerIds}
+            <RoundSignupList
+              members={allTeamMembers}
+              signedUpIds={nextRound.signed_up_ids}
+              onToggleSignup={(userId) => {
+                if (nextRound.signed_up_ids.includes(userId)) {
+                  withdraw(nextRound.id, userId)
+                } else {
+                  signUp(nextRound.id, userId)
+                }
+              }}
+              isAdmin={isAdmin}
             />
           </ScrollFadeIn>
         )}

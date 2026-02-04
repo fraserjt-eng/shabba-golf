@@ -221,6 +221,14 @@ export function ProfilePage() {
                       </Badge>
                     )}
                     {isAdmin && (
+                      <Link to="/admin">
+                        <Button size="sm" variant="ghost" className="gap-1 text-xs">
+                          <Shield className="h-3.5 w-3.5" />
+                          Admin
+                        </Button>
+                      </Link>
+                    )}
+                    {isAdmin && (
                       <Link to="/team/settings">
                         <Button size="sm" variant="ghost">
                           <Settings className="h-3.5 w-3.5" />

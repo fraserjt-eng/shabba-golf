@@ -44,6 +44,7 @@ export async function lookupGhinHandicap(ghinNumber: string): Promise<{
 } | null> {
   // Demo mode: return mock data based on GHIN number
   const mockData: Record<string, { handicapIndex: number; playerName: string }> = {
+    '2270337': { handicapIndex: 12.4, playerName: 'Josh Fraser' },
     '1234567': { handicapIndex: 12.4, playerName: 'Jake Fraser' },
     '2345678': { handicapIndex: 8.2, playerName: 'Mike Sullivan' },
     '3456789': { handicapIndex: 15.1, playerName: 'Chris Daniels' },

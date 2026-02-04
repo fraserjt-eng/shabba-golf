@@ -17,6 +17,7 @@ const RoundHistoryPage = lazy(() => import('@/pages/RoundHistoryPage').then((m) 
 const SettlementsPage = lazy(() => import('@/pages/SettlementsPage').then((m) => ({ default: m.SettlementsPage })))
 const TeamSettingsPage = lazy(() => import('@/pages/TeamSettingsPage').then((m) => ({ default: m.TeamSettingsPage })))
 const MemberProfilePage = lazy(() => import('@/pages/MemberProfilePage').then((m) => ({ default: m.MemberProfilePage })))
+const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage })))
 
 function LoadingFallback() {
   return (
@@ -63,6 +64,7 @@ function App() {
               <Route path="/settlements" element={<SettlementsPage />} />
               <Route path="/team/settings" element={<TeamSettingsPage />} />
               <Route path="/member/:id" element={<MemberProfilePage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
           </Routes>
         </Suspense>
