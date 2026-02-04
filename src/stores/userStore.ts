@@ -33,8 +33,14 @@ export const useUserStore = create<UserState>()(
         fetchCurrentUser: async () => {
           if (!isSupabaseConfigured()) {
             // In demo mode, keep already-selected user if present — do NOT auto-login
-            const { currentUser } = get()
-            set({ currentUser, allUsers: [...demoUsers], loading: false })
+            const { currentUser, allUsers } = get()
+            // Merge demo users with any registered users already in state (from localStorage)
+            const existingIds = new Set(allUsers.map((u) => u.id))
+            const merged = [...allUsers]
+            for (const demo of demoUsers) {
+              if (!existingIds.has(demo.id)) merged.push(demo)
+            }
+            set({ currentUser, allUsers: merged, loading: false })
             return
           }
           set({ loading: true, error: null })
